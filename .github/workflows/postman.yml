@@ -22,7 +22,7 @@ jobs:
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
       - name: Run API tests
-        run: postman collection run "16175838-f6139bf1-9dd3-42db-9bdb-871151cb63b4"
+        run: postman collection run‪C:\Users\user\AppData\Local\Postman\app-11.1.14\Simple Book Api.postman_collection.json --reporters cli,json > newman-results.json
 
       - name: Generate report.txt
         id: generate_report
