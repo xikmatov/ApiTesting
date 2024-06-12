@@ -15,17 +15,21 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Postman CLI
+        if: always()
         run: |
           powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
 
       - name: Login to Postman CLI
+        if: always()
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
-      - name: Run API tests
+      - name: Run API tests and generate report
+        if: always()
         run: |
-          newman run "path/to/your_collection.json" --reporters cli,json --reporter-json-export newman-results.json
+          postman collection run "16175838-f6139bf1-9dd3-42db-9bdb-871151cb63b4" --reporters cli,json > newman-results.json
 
       - name: Generate report.txt
+        if: always()
         id: generate_report
         run: |
           $results = Get-Content -Raw -Path newman-results.json | ConvertFrom-Json
@@ -35,6 +39,7 @@ jobs:
           "Total tests failed: $failed_tests" | Out-File -FilePath report.txt -Append
 
       - name: Send report to Telegram
+        if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
