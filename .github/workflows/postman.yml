@@ -1,48 +1,16 @@
-name: API Testing
+name: Automated API tests using Postman CLI
 
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '0 */6 * * *' # Runs every 6 hours
+on: push
 
 jobs:
-  api-tests:
-    runs-on: ubuntu-latest
-
+  automated-api-tests:
+    runs-on: windows-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        id: run-tests
+      - uses: actions/checkout@v4
+      - name: Install Postman CLI
         run: |
-          npm test > test-results.txt
-          TESTS_EXECUTED=$(grep -o "Tests: .*" test-results.txt | awk '{print $2}')
-          TESTS_FAILED=$(grep -o "Tests: .*" test-results.txt | awk '{print $4}')
-          echo "TESTS_EXECUTED=$TESTS_EXECUTED" >> $GITHUB_ENV
-          echo "TESTS_FAILED=$TESTS_FAILED" >> $GITHUB_ENV
-
-      - name: Send results to Telegram
-        if: always()
+          powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Run API tests
         run: |
-          MESSAGE="API Test Results:\nTests executed: ${{ env.TESTS_EXECUTED }}\nTests failed: ${{ env.TESTS_FAILED }}"
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} -d text="$MESSAGE"
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: test-results.txt
