@@ -1,16 +1,43 @@
 name: Automated API tests using Postman CLI
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 */6 * * *'  # This runs the workflow every 6 hours
 
 jobs:
   automated-api-tests:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Postman CLI
         run: |
           powershell.exe -NoProfile -InputFormat None -ExecutionPolicy AllSigned -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://dl-cli.pstmn.io/install/win64.ps1'))"
+
       - name: Login to Postman CLI
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
       - name: Run API tests
+        run: postman collection run path/to/your_collection.json --reporters cli,json --reporter-json-export newman-results.json
+
+      - name: Generate report.txt
+        id: generate_report
         run: |
+          $results = Get-Content -Raw -Path newman-results.json | ConvertFrom-Json
+          $total_tests = $results.run.stats.tests.total
+          $failed_tests = $results.run.stats.tests.failed
+          "Total tests executed: $total_tests" | Out-File -FilePath report.txt -Append
+          "Total tests failed: $failed_tests" | Out-File -FilePath report.txt -Append
+
+      - name: Send report to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          $message = Get-Content -Path report.txt
+          Invoke-RestMethod -Uri "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" -Method Post -ContentType 'application/json' -Body (@{chat_id = ${{ secrets.TELEGRAM_CHAT_ID }}; text = $message} | ConvertTo-Json)
+
