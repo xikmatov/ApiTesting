@@ -23,7 +23,7 @@ jobs:
 
       - name: Run API tests and generate report
         run: |
-          postman collection run "16175838-f6139bf1-9dd3-42db-9bdb-871151cb63b4" --reporters cli,json > newman-results.json
+           postman collection run "16175838-f6139bf1-9dd3-42db-9bdb-871151cb63b4" --reporter-json-export newman-results.json
 
       - name: Generate report.txt
         id: generate_report
