@@ -23,7 +23,7 @@ jobs:
 
       - name: Run API tests
         run: |
-          newman run "C:\Users\user\AppData\Local\Postman\app-11.1.14\Simple Book Api.postman_collection.json" --reporters cli,json --reporter-json-export newman-results.json
+          newman run "path/to/your_collection.json" --reporters cli,json --reporter-json-export newman-results.json
 
       - name: Generate report.txt
         id: generate_report
